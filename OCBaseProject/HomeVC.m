@@ -16,10 +16,16 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    [self addTitle:@"首页"];
+    self.view.backgroundColor = [UIColor getGreenColor];
+    
+    [self.emptyView image:nil labelString:@"暂无数据"];
+}
 
-
-
-
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [self.emptyView setHidden:YES];
+    
 }
 
 
