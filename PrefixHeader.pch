@@ -1,0 +1,38 @@
+//
+//  PrefixHeader.pch
+//  OCBaseProject
+//
+//  Created by zhangmingwei on 2018/12/8.
+//  Copyright © 2018 xiaoming. All rights reserved.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+
+#import "Tool.h"
+#import "ProgressHUD.h"
+#import "UINavigationController+FDFullscreenPopGesture.h"
+#import "SoundPlayer.h"
+#import "UserManager.h"
+#import "UtilMacro.h"
+
+#import <Masonry/Masonry.h>
+#import <ReactiveCocoa/ReactiveCocoa.h>
+
+// 类目相关
+#import "UIView+CodeFragments.h"
+#import "UIColor+IOSUtils.h"
+#import "NSString+IOSUtils.h"
+#import "UIButton+IOSUtil.h"
+#import "UIImageView+IOSUtils.h"
+#import "UILabel+IOSUtils.h"
+#import "UITableView+IOSUtils.h"
+#import "NSDate+Utils.h"
+
+
+
+
+#endif /* PrefixHeader_pch */
