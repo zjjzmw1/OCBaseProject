@@ -8,94 +8,88 @@
 
 #import "Tool.h"
 #import <AVFoundation/AVFoundation.h>
+#import "BaseModel.h"
 
 @implementation Tool
-/**
- 保存NSData数据到本地
- 
- @param fileName 保存的key
- @param file NSData数据
- @param isModel 是否是model
- @return 保存是否成功
- */
-+ (BOOL)saveDataToLoc:(NSString *)fileName theFile:(id)file isModel:(BOOL)isModel {
-    NSString *Path = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString *CachePath = [fileName stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
+
+/// 从本地获取Model的数据
++ (NSMutableArray *)getModelArray:(NSString *)modelArrayKey {
+    NSMutableArray *lastArr = [NSMutableArray array];
+    // 获取
+    NSString *Path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *lastKeyStr = [NSString stringWithFormat:@"voiceMemo/%@.txt",modelArrayKey];
+    NSString *CachePath = [lastKeyStr stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
     NSString *filename = [Path stringByAppendingPathComponent:CachePath];
-    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSData *readData = [[NSData alloc]initWithContentsOfFile:filename];
+    if (readData) {
+        NSArray *readArr = [NSJSONSerialization JSONObjectWithData:readData options:NSJSONReadingAllowFragments error:nil];
+        if (readArr.count > 0) {
+            [lastArr addObjectsFromArray:readArr];
+        }
+    }
     
+    // 把获取到的数组，包装下，返回。
+    NSMutableArray *lastModelArr = [NSMutableArray array];
+    if (lastArr.count > 0) {
+        for (int i = 0; i < lastArr.count; i++) {
+            NSDictionary *dict = lastArr[i];
+            if (dict && dict.count > 0) {
+                BaseModel *model = [BaseModel initWithDictionary:dict];
+                if (model) {
+                    [lastModelArr addObject:model];
+                } else {
+                    [lastModelArr addObject:dict];
+                }
+            }
+        }
+    }
+    return  lastModelArr;
+}
+
+/// 保存Model到本地 --- model数组，普通的数组都可以保存
++ (void)saveModelArray:(NSArray *)arr modelArrayKey:(NSString *)modelArrayKey {
+    // 存放json的数组
+    NSMutableArray *jsonArr = [NSMutableArray array];
+    for (int i = 0; i < arr.count; i++) {
+        BaseModel *model = arr[i];
+        if (model) {
+            [jsonArr addObject:model.modelToJSONObject];
+        }
+    }
+    // 如果传来的不是model，就直接保存数组。
+    NSMutableArray *lastArr = [NSMutableArray arrayWithArray:arr];
+    if (jsonArr.count > 0) {
+        lastArr = [NSMutableArray arrayWithArray:jsonArr];
+    }
+    NSString *jsonStr = [Tool toJSONString:lastArr];
+    NSData *jsonData = [jsonStr dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *lastKeyStr = [NSString stringWithFormat:@"voiceMemo/%@.txt",modelArrayKey];
+    NSString *Path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *CachePath = [lastKeyStr stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
+    NSString *filename = [Path stringByAppendingPathComponent:CachePath];
+    NSLog(@"saveKey===%@",filename);
+    NSFileManager *fileManager = [NSFileManager defaultManager];
     if (![fileManager fileExistsAtPath:filename]) {
         if (![fileManager createFileAtPath:filename contents:nil attributes:nil]) {
             NSLog(@"createFile error occurred");
         }
     }
-    if (isModel) {
-        return [NSKeyedArchiver archiveRootObject:file toFile:filename];
-    }
-    return [file writeToFile:filename atomically:YES];
-}
-
-
-/**
- 获取本地的NSData
- 
- @param filePath key
- @return NSData数据
- */
-+ (nullable NSData *)getDataFileFromLoc:(NSString *)filePath {
-    NSString *Path = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString *CachePath = [filePath stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
-    NSString *filename = [Path stringByAppendingPathComponent:CachePath];
-    NSData *file = [NSData dataWithContentsOfFile:filename];
-    if ([file length] == 0) {
-        return nil;
-    }
-    return file;
-}
-
-+ (BOOL)getFileFromLoc:(NSString *)filePath into:(id)file {
-    NSString *Path = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString *CachePath = [filePath stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
-    NSString *filename = [Path stringByAppendingPathComponent:CachePath];
-    
-    if ([file isKindOfClass:[NSMutableDictionary class]]) {
-        [file setDictionary:[NSMutableDictionary dictionaryWithContentsOfFile:filename]];
-        
-        if ([file count] == 0) {
-            return NO;
-        }
-    } else if ([file isKindOfClass:[NSMutableArray class]]) {
-        [file addObjectsFromArray:[NSMutableArray arrayWithContentsOfFile:filename]];
-        
-        if ([file count] == 0) {
-            return NO;
-        }
-    } else if ([file isKindOfClass:[NSData class]]) {
-        file = [NSData dataWithContentsOfFile:filename];
-        
-        if ([file length] == 0) {
-            return NO;
-        }
+    if ([jsonData writeToFile:filename atomically:YES]) {
+        NSLog(@"保存成功");
+    } else {
+        NSLog(@"保存失败");
     }
     
-    return YES;
 }
 
-+ (BOOL)saveFileToLoc:(NSString *)fileName theFile:(id)file {
-    NSString *Path = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString *CachePath = [fileName stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
-    NSString *filename = [Path stringByAppendingPathComponent:CachePath];
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    
-    if (![fileManager fileExistsAtPath:filename]) {
-        if (![fileManager createFileAtPath:filename contents:nil attributes:nil]) {
-            NSLog(@"createFile error occurred");
-        }
++(NSString *)toJSONString:(NSArray *)arr {
+    NSString *jsonStr = @"";
+    NSData *data = [NSJSONSerialization dataWithJSONObject:arr options:NSJSONWritingPrettyPrinted error:nil];
+    if (data) {
+        jsonStr = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
     }
-    
-    return [file writeToFile:filename atomically:YES];
+    return jsonStr;
 }
-
 
 /**
  *  设置statusBar颜色是否是白色的

@@ -13,28 +13,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface Tool : NSObject
 
-
-/**
- 保存NSData数据到本地
- 
- @param fileName 保存的key
- @param file NSData数据
- @param isModel 是否是model
- @return 保存是否成功
- */
-+ (BOOL)saveDataToLoc:(NSString *)fileName theFile:(id)file isModel:(BOOL)isModel;
-
-/**
- 获取本地的NSData
- 
- @param filePath key
- @return NSData数据
- */
-+ (nullable NSData *)getDataFileFromLoc:(NSString *)filePath;
-
-+ (BOOL)saveFileToLoc:(NSString *)fileName theFile:(id)file;
-+ (BOOL)getFileFromLoc:(NSString *)filePath into:(id)file;
-
+/// 从本地获取Model的数据 -- 可以是普通数组，model数组都OK
++ (NSMutableArray *)getModelArray:(NSString *)modelArrayKey;
+/// 保存Model到本地 - 可以是普通数组和model数组都OK
++ (void)saveModelArray:(NSArray *)arr modelArrayKey:(NSString *)modelArrayKey;
+/// 转换数组到jsonStr
++(NSString *)toJSONString:(NSArray *)arr;
 
 /**
  *  设置statusBar颜色是否是白色的
